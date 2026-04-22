@@ -1,0 +1,32 @@
+# Build artifacts
+bin/
+obj/
+
+# User-specific files
+.vs/
+*.user
+*.suo
+
+# Rider/JetBrains
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local SQLite database files
+urls.db
+urls.db-shm
+urls.db-wal
+
+# Optional: ignore all SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Local app settings overrides (usually machine-specific)
+appsettings.Development.local.json
+/bin
