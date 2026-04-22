@@ -18,7 +18,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+    if (!app.Environment.IsProduction())
+    {
+        app.UseHttpsRedirection();
+    }
 
 app.MapPost("/api/url/shorten", async (ShortenRequest request, AppDbContext dbContext, HttpContext httpContext) =>
 {

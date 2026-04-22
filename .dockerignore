@@ -1,0 +1,7 @@
+bin/
+obj/
+.git/
+.vs/
+urls.db
+urls.db-shm
+urls.db-wal
