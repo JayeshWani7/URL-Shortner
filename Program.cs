@@ -27,6 +27,22 @@ app.MapPost("/api/url/shorten", async (ShortenRequest request, AppDbContext dbCo
         return Results.BadRequest(new { message = "Please provide a valid absolute http/https URL." });
     }
 
+    var normalizedOriginalUrl = uri.AbsoluteUri;
+    var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+
+    var existingShortUrl = await dbContext.Urls.FirstOrDefaultAsync(url => url.OriginalUrl == normalizedOriginalUrl);
+    if (existingShortUrl is not null)
+    {
+        return Results.Ok(new
+        {
+            message = "URL is already shortened.",
+            shortUrl = $"{baseUrl}/{existingShortUrl.ShortCode}",
+            code = existingShortUrl.ShortCode,
+            originalUrl = existingShortUrl.OriginalUrl,
+            alreadyShortened = true
+        });
+    }
+
     string code;
     do
     {
@@ -36,19 +52,20 @@ app.MapPost("/api/url/shorten", async (ShortenRequest request, AppDbContext dbCo
 
     var shortUrl = new ShortUrl
     {
-        OriginalUrl = request.Url,
+        OriginalUrl = normalizedOriginalUrl,
         ShortCode = code
     };
 
     dbContext.Urls.Add(shortUrl);
     await dbContext.SaveChangesAsync();
 
-    var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
     return Results.Ok(new
     {
+        message = "Short URL created successfully.",
         shortUrl = $"{baseUrl}/{code}",
         code,
-        originalUrl = request.Url
+        originalUrl = normalizedOriginalUrl,
+        alreadyShortened = false
     });
 })
 .WithName("ShortenUrl");
