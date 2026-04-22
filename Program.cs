@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 using UrlShortener.Contracts;
 using UrlShortener.Data;
 using UrlShortener.Models;
@@ -29,10 +30,31 @@ app.MapPost("/api/url/shorten", async (ShortenRequest request, AppDbContext dbCo
 
     var normalizedOriginalUrl = uri.AbsoluteUri;
     var baseUrl = $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
+    var alias = string.IsNullOrWhiteSpace(request.Alias) ? null : request.Alias.Trim();
+
+    if (alias is not null && !Regex.IsMatch(alias, "^[a-zA-Z0-9_-]{3,32}$"))
+    {
+        return Results.BadRequest(new
+        {
+            message = "Alias must be 3-32 characters and contain only letters, numbers, underscore, or hyphen."
+        });
+    }
 
     var existingShortUrl = await dbContext.Urls.FirstOrDefaultAsync(url => url.OriginalUrl == normalizedOriginalUrl);
     if (existingShortUrl is not null)
     {
+        if (alias is not null && !string.Equals(existingShortUrl.ShortCode, alias, StringComparison.Ordinal))
+        {
+            return Results.BadRequest(new
+            {
+                message = "URL is already shortened with a different code.",
+                shortUrl = $"{baseUrl}/{existingShortUrl.ShortCode}",
+                code = existingShortUrl.ShortCode,
+                originalUrl = existingShortUrl.OriginalUrl,
+                alreadyShortened = true
+            });
+        }
+
         return Results.Ok(new
         {
             message = "URL is already shortened.",
@@ -44,11 +66,24 @@ app.MapPost("/api/url/shorten", async (ShortenRequest request, AppDbContext dbCo
     }
 
     string code;
-    do
+    if (alias is not null)
     {
-        code = ShortCodeGenerator.Generate();
+        var aliasExists = await dbContext.Urls.AnyAsync(url => url.ShortCode == alias);
+        if (aliasExists)
+        {
+            return Results.BadRequest(new { message = "Alias is already in use. Please choose another one." });
+        }
+
+        code = alias;
     }
-    while (await dbContext.Urls.AnyAsync(url => url.ShortCode == code));
+    else
+    {
+        do
+        {
+            code = ShortCodeGenerator.Generate();
+        }
+        while (await dbContext.Urls.AnyAsync(url => url.ShortCode == code));
+    }
 
     var shortUrl = new ShortUrl
     {
