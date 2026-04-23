@@ -7,4 +7,5 @@ public class ShortUrl
     public required string ShortCode { get; set; }
     public int Clicks { get; set; } = 0;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public ICollection<ShortUrlRule> Rules { get; set; } = new List<ShortUrlRule>();
 }
