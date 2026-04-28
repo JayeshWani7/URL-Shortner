@@ -14,9 +14,6 @@ public class ShortUrlRule
     public string? CountryCode { get; set; }
     public string? LanguagePrefix { get; set; }
 
-    public DateTime? ActiveFromUtc { get; set; }
-    public DateTime? ActiveUntilUtc { get; set; }
-
     // Optional deterministic bucket range for A/B testing, inclusive, 0-99.
     public int? BucketStart { get; set; }
     public int? BucketEnd { get; set; }

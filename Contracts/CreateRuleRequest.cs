@@ -7,8 +7,6 @@ public class CreateRuleRequest
     public string? DeviceType { get; set; }
     public string? CountryCode { get; set; }
     public string? LanguagePrefix { get; set; }
-    public DateTime? ActiveFromUtc { get; set; }
-    public DateTime? ActiveUntilUtc { get; set; }
     public int? BucketStart { get; set; }
     public int? BucketEnd { get; set; }
 }

@@ -152,11 +152,6 @@ app.MapPost("/api/url/{code}/rules", async (string code, CreateRuleRequest reque
         normalizedLanguage = request.LanguagePrefix.Trim().ToLowerInvariant();
     }
 
-    if (request.ActiveFromUtc.HasValue && request.ActiveUntilUtc.HasValue && request.ActiveFromUtc > request.ActiveUntilUtc)
-    {
-        return Results.BadRequest(new { message = "ActiveFromUtc must be less than or equal to ActiveUntilUtc." });
-    }
-
     if (request.BucketStart.HasValue != request.BucketEnd.HasValue)
     {
         return Results.BadRequest(new { message = "BucketStart and BucketEnd must be provided together." });
@@ -180,8 +175,6 @@ app.MapPost("/api/url/{code}/rules", async (string code, CreateRuleRequest reque
         DeviceType = normalizedDevice,
         CountryCode = normalizedCountry,
         LanguagePrefix = normalizedLanguage,
-        ActiveFromUtc = request.ActiveFromUtc,
-        ActiveUntilUtc = request.ActiveUntilUtc,
         BucketStart = request.BucketStart,
         BucketEnd = request.BucketEnd
     };
@@ -201,8 +194,6 @@ app.MapPost("/api/url/{code}/rules", async (string code, CreateRuleRequest reque
             rule.DeviceType,
             rule.CountryCode,
             rule.LanguagePrefix,
-            rule.ActiveFromUtc,
-            rule.ActiveUntilUtc,
             rule.BucketStart,
             rule.BucketEnd,
             rule.HitCount
@@ -231,8 +222,6 @@ app.MapGet("/api/url/{code}/rules", async (string code, AppDbContext dbContext) 
             rule.DeviceType,
             rule.CountryCode,
             rule.LanguagePrefix,
-            rule.ActiveFromUtc,
-            rule.ActiveUntilUtc,
             rule.BucketStart,
             rule.BucketEnd,
             rule.HitCount
@@ -354,16 +343,6 @@ static RequestContext BuildRequestContext(HttpContext httpContext, string code)
 
 static bool RuleMatches(ShortUrlRule rule, RequestContext context)
 {
-    if (rule.ActiveFromUtc.HasValue && context.NowUtc < rule.ActiveFromUtc.Value)
-    {
-        return false;
-    }
-
-    if (rule.ActiveUntilUtc.HasValue && context.NowUtc > rule.ActiveUntilUtc.Value)
-    {
-        return false;
-    }
-
     var requiredDevice = NormalizeDevice(rule.DeviceType) ?? "any";
     if (requiredDevice != "any" && requiredDevice != context.Device)
     {
